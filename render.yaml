@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: practice1126-preclass
+    runtime: static
+    buildCommand: ""
+    staticPublishPath: .
