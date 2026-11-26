@@ -49,6 +49,19 @@ window.RTK3 = window.RTK3 || {};
     document.getElementById('title-screen').classList.remove('hidden');
     document.getElementById('game-screen').classList.add('hidden');
     document.getElementById('victory-screen').classList.add('hidden');
+    if (Audio.setBgm) Audio.setBgm('title');
+
+    const titleBgmBtn = document.getElementById('btn-title-bgm');
+    if (titleBgmBtn) {
+      const syncTitleBgm = () => {
+        titleBgmBtn.textContent = Audio.isBgmEnabled() && !Audio.isMuted() ? '🎵 BGM：開' : '🔇 BGM：關';
+      };
+      syncTitleBgm();
+      titleBgmBtn.onclick = () => {
+        Audio.toggleBgm();
+        syncTitleBgm();
+      };
+    }
 
     const scenList = document.getElementById('scenario-list');
     const rulerList = document.getElementById('ruler-list');
@@ -200,6 +213,7 @@ window.RTK3 = window.RTK3 || {};
     document.getElementById('title-screen').classList.add('hidden');
     document.getElementById('game-screen').classList.remove('hidden');
     document.getElementById('victory-screen').classList.add('hidden');
+    if (Audio.setBgm) Audio.setBgm('strategy');
     renderAll();
   }
 
@@ -288,6 +302,7 @@ window.RTK3 = window.RTK3 || {};
         <button class="btn-rtk btn-sm" id="btn-roster">📋 武將名鑑(${GENERALS_TEMPLATE.length}) ${n5Tag('namae', '', true)}</button>
         <button class="btn-rtk btn-sm" id="btn-n5-book">📖 N5圖鑑 (${n5Mastered.size}/${N5_VOCAB.length})</button>
         <button class="btn-rtk btn-sm" id="btn-save">💾 存檔 ${n5Tag('kaku', '', true)}</button>
+        <button class="btn-rtk btn-sm" id="btn-bgm">${Audio.isBgmEnabled() && !Audio.isMuted() ? '🎵 BGM:開' : '🎵 BGM:關'}</button>
         <button class="btn-rtk btn-sm" id="btn-mute">${Audio.isMuted() ? '🔇 靜音' : '🔊 音效'} ${n5Tag('oto', '', true)}</button>
         <button class="btn-rtk btn-sm" id="btn-restart">🏠 劇本</button>
       </div>
@@ -297,6 +312,7 @@ window.RTK3 = window.RTK3 || {};
     document.getElementById('btn-roster').onclick = () => openRosterModal();
     document.getElementById('btn-n5-book').onclick = () => openWordbookModal();
     document.getElementById('btn-save').onclick = saveGame;
+    document.getElementById('btn-bgm').onclick = () => { Audio.toggleBgm(); renderTopBar(); };
     document.getElementById('btn-mute').onclick = () => { Audio.toggleMute(); renderTopBar(); };
     document.getElementById('btn-restart').onclick = () => {
       if (confirm('確定返回劇本選擇畫面？（未存檔進度將遺失）')) renderScenarioScreen();

@@ -146,6 +146,7 @@ window.RTK3.Battle = (function () {
     };
 
     if (onN5SeenCb) onN5SeenCb(['tenki', weather.n5Id, 'yama', 'kawa', 'mori', 'jikan']);
+    if (window.RTK3.Audio && window.RTK3.Audio.setBgm) window.RTK3.Audio.setBgm('battle');
     openModal();
     startPhase('atk');
   }
@@ -378,6 +379,7 @@ window.RTK3.Battle = (function () {
 
     setTimeout(() => {
       closeModal();
+      if (window.RTK3.Audio && window.RTK3.Audio.setBgm) window.RTK3.Audio.setBgm('strategy');
       if (onCompleteCb) {
         onCompleteCb({
           winnerSide,
