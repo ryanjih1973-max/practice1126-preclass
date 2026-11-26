@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>三國志III × 日語N5 霸業學園 — 回合制歷史策略</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Title / Scenario & Ruler Selection -->
+  <section id="title-screen" class="screen-title">
+    <div class="title-frame panel-gold">
+      <header class="title-hero">
+        <div class="hero-kicker">SANGOKUSHI III STYLE · JLPT N5 INTERFACE</div>
+        <h1>三國志III <span>×</span> 日語 N5 霸業篇</h1>
+        <p class="hero-desc">
+          純前端經典歷史策略：選擇年代劇本與君主、經營內政、出征攻城、單挑對決、統一天下！<br />
+          介面詞彙全面融入 <strong>JLPT N5 日語漢字・假名・發音與軍師問答</strong>，點擊任何假名標籤即可聽讀學習。
+        </p>
+      </header>
+
+      <div class="setup-columns">
+        <div class="setup-col">
+          <h2>1. 選擇劇本年代（<ruby>年<rt>ねん</rt></ruby>・<ruby>新<rt>あたら</rt></ruby>しい<ruby>物語<rt>ものがたり</rt></ruby>）</h2>
+          <div id="scenario-list" class="scen-list"></div>
+        </div>
+        <div class="setup-col">
+          <h2>2. 選擇君主勢力（<ruby>名前<rt>なまえ</rt></ruby>・<ruby>国<rt>くに</rt></ruby>）</h2>
+          <div id="ruler-list" class="ruler-list"></div>
+        </div>
+      </div>
+
+      <div class="title-actions">
+        <button id="btn-start-game" class="btn-rtk btn-accent btn-lg">⚔️ 開始霸業（<ruby>始<rt>はじ</rt></ruby>める）</button>
+        <button id="btn-continue-save" class="btn-rtk btn-lg" style="display:none;">📂 繼續上次進度</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Strategy Screen -->
+  <section id="game-screen" class="screen-game hidden">
+    <header id="hud-bar" class="hud-bar panel-gold"></header>
+
+    <main class="main-layout">
+      <!-- Left: Strategic China Map -->
+      <div class="map-panel panel-gold">
+        <div class="map-compass">
+          <span class="dir-badge dir-n n5-chip" data-n5="kita"><ruby>北<rt>きた</rt></ruby></span>
+          <span class="dir-badge dir-s n5-chip" data-n5="minami"><ruby>南<rt>みなみ</rt></ruby></span>
+          <span class="dir-badge dir-w n5-chip" data-n5="nishi"><ruby>西<rt>にし</rt></ruby></span>
+          <span class="dir-badge dir-e n5-chip" data-n5="higashi"><ruby>東<rt>ひがし</rt></ruby></span>
+        </div>
+        <canvas id="china-map" width="1000" height="640"></canvas>
+        <div class="map-footer-hint">
+          <span>🗺 點選地圖城池切換視角 · 黃線為相鄰<span class="n5-chip" data-n5="michi"><ruby>道<rt>みち</rt></ruby></span>路 · 點任何假名可看 N5 解說與發音</span>
+        </div>
+      </div>
+
+      <!-- Right: City Inspector, Monthly Word Card, Commands & Log -->
+      <aside class="side-panel">
+        <div id="monthly-word-panel" class="panel-gold side-box monthly-word-box"></div>
+        <div id="city-panel" class="panel-gold side-box"></div>
+        <div id="command-panel" class="panel-gold side-box"></div>
+        <div class="panel-gold side-box log-panel">
+          <div class="section-label">📜 軍政日誌（<span class="n5-chip" data-n5="ima"><ruby>今<rt>いま</rt></ruby></span>）</div>
+          <div id="strategy-log" class="strategy-log"></div>
+        </div>
+      </aside>
+    </main>
+  </section>
+
+  <!-- Tactical Battle Modal -->
+  <div id="battle-modal" class="modal-backdrop hidden">
+    <div class="battle-shell panel-gold">
+      <div id="battle-header" class="battle-header"></div>
+      <div class="battle-body">
+        <div id="battle-grid" class="battle-grid"></div>
+        <div id="battle-controls" class="battle-controls"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Duel Overlay -->
+  <div id="duel-overlay" class="modal-backdrop hidden"></div>
+
+  <!-- Generic Action / Wordbook / Quiz Modal -->
+  <div id="action-modal" class="modal-backdrop hidden"></div>
+
+  <!-- Victory / Defeat Screen -->
+  <section id="victory-screen" class="screen-title hidden"></section>
+
+  <!-- Floating N5 Dictionary Card -->
+  <div id="n5-toast-card" class="n5-toast panel-gold hidden"></div>
+
+  <script defer src="src/n5Data.js"></script>
+  <script defer src="src/gameData.js"></script>
+  <script defer src="src/audioAndPortraits.js"></script>
+  <script defer src="src/battle.js"></script>
+  <script defer src="src/game.js"></script>
+</body>
+</html>
