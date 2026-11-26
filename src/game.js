@@ -2,7 +2,7 @@
 window.RTK3 = window.RTK3 || {};
 
 (function () {
-  const { FACTIONS, CITIES_TEMPLATE, GENERALS_TEMPLATE, SCENARIOS, N5_VOCAB, N5_BY_ID, MONTH_JP, getSeasonByMonth, n5Tag, generateQuizQuestion, Audio, speakJP, renderPortraitSVG } = window.RTK3;
+  const { FACTIONS, CITIES_TEMPLATE, GENERALS_TEMPLATE, SCENARIOS, N5_VOCAB, N5_BY_ID, MONTH_JP, getSeasonByMonth, n5Tag, jpPlayBtn, generateQuizQuestion, Audio, speakJP, renderPortraitSVG } = window.RTK3;
 
   const SAVE_KEY = 'rtk3_n5_save_v1';
 
@@ -76,7 +76,7 @@ window.RTK3 = window.RTK3 || {};
       scenList.innerHTML = SCENARIOS.map(s => `
         <div class="scen-card ${s.id === chosenScen.id ? 'active' : ''}" data-scen="${s.id}">
           <div class="scen-year">${s.title}</div>
-          <div class="scen-jp">${s.jpTitle}</div>
+          <div class="scen-jp">${s.jpTitle} ${jpPlayBtn(s.jpTitle)}</div>
           <div class="scen-desc">${s.subtitle}</div>
           <div class="scen-diff">${s.difficultyInfo}</div>
         </div>
@@ -107,7 +107,7 @@ window.RTK3 = window.RTK3 || {};
           <div class="ruler-card ${fid === chosenRuler ? 'active' : ''}" data-ruler="${fid}" style="border-left: 5px solid ${fac.color}">
             ${renderPortraitSVG(gen, 58)}
             <div class="ruler-info">
-              <div class="ruler-name">${fac.name} <small>(${gen.kana})</small></div>
+              <div class="ruler-name">${fac.name} <small>(${gen.kana})</small> ${jpPlayBtn(gen.kana)}</div>
               <div class="ruler-stats">城池 ${cityCount} | 總兵力 ${totalTroops}</div>
               <div class="ruler-desc">${fac.desc}</div>
             </div>
@@ -272,7 +272,7 @@ window.RTK3 = window.RTK3 || {};
         </div>
         <div class="hud-pill" title="N5: 年 (ねん) / 月 (がつ)">
           📅 ${game.year}${n5Tag('nen', '', true)}
-          <span class="n5-chip" data-n5="gatsu"><ruby>${mInfo.kanji}<rt>${mInfo.kana}</rt></ruby></span>
+          <span class="n5-chip" data-n5="gatsu"><ruby>${mInfo.kanji}<rt>${mInfo.kana}</rt></ruby>${jpPlayBtn(mInfo.kana)}</span>
           (${n5Tag(season.n5Id, season.zh)})
         </div>
       </div>
@@ -285,6 +285,7 @@ window.RTK3 = window.RTK3 || {};
       </div>
       <div class="hud-right">
         <button class="btn-rtk btn-sm btn-accent" id="btn-n5-quiz">🏫 私塾測驗 ${n5Tag('benkyou', '', true)} ${game.n5QuizDoneTurn ? '(練習)' : '(+軍資)'}</button>
+        <button class="btn-rtk btn-sm" id="btn-roster">📋 武將名鑑(${GENERALS_TEMPLATE.length}) ${n5Tag('namae', '', true)}</button>
         <button class="btn-rtk btn-sm" id="btn-n5-book">📖 N5圖鑑 (${n5Mastered.size}/${N5_VOCAB.length})</button>
         <button class="btn-rtk btn-sm" id="btn-save">💾 存檔 ${n5Tag('kaku', '', true)}</button>
         <button class="btn-rtk btn-sm" id="btn-mute">${Audio.isMuted() ? '🔇 靜音' : '🔊 音效'} ${n5Tag('oto', '', true)}</button>
@@ -293,6 +294,7 @@ window.RTK3 = window.RTK3 || {};
     `;
 
     document.getElementById('btn-n5-quiz').onclick = () => openShijukuModal();
+    document.getElementById('btn-roster').onclick = () => openRosterModal();
     document.getElementById('btn-n5-book').onclick = () => openWordbookModal();
     document.getElementById('btn-save').onclick = saveGame;
     document.getElementById('btn-mute').onclick = () => { Audio.toggleMute(); renderTopBar(); };
@@ -313,7 +315,7 @@ window.RTK3 = window.RTK3 || {};
 
     box.innerHTML = `
       <div class="mw-head">
-        <span class="mw-badge">📅 今月之言葉（${mInfo.kanji}・${n5Tag('kotoba', '', true)}）</span>
+        <span class="mw-badge">📅 今月之言葉（<ruby>${mInfo.kanji}<rt>${mInfo.kana}</rt></ruby>${jpPlayBtn(mInfo.kana)}・${n5Tag('kotoba', '', true)}）</span>
         <div class="mw-btns">
           <button class="btn-rtk btn-sm" id="btn-mw-speak">🔊 讀音</button>
           <button class="btn-rtk btn-sm" id="btn-mw-master">${isMastered ? '✅ 已熟記' : '⭐ 標記熟記'}</button>
@@ -323,6 +325,7 @@ window.RTK3 = window.RTK3 || {};
       <div class="mw-main">
         <div class="mw-word">
           <ruby>${w.kanji}<rt>${w.kana}</rt></ruby>
+          ${jpPlayBtn(w.kana)}
           <span class="mw-romaji">(${w.romaji})</span>
         </div>
         <div class="mw-meaning">
@@ -354,8 +357,34 @@ window.RTK3 = window.RTK3 || {};
     };
   }
 
-  // === Canvas Map Rendering ===
+  // === Canvas Map Rendering (46 cities on 1200x760) ===
+  function renderQuickSelect() {
+    const sel = document.getElementById('city-quick-select');
+    if (!sel || !game) return;
+    const pCities = game.cities.filter(c => c.owner === game.playerFactionId);
+    const otherCities = game.cities.filter(c => c.owner && c.owner !== game.playerFactionId);
+    const emptyCities = game.cities.filter(c => !c.owner);
+
+    const optHtml = (list) => list.map(c => {
+      const own = c.owner ? FACTIONS[c.owner].name : '空白城';
+      const rdy = c.owner === game.playerFactionId ? ` [待命${getReadyGenerals(c).length}]` : '';
+      return `<option value="${c.id}" ${c.id === selectedCityId ? 'selected' : ''}>${c.name} (${own}·兵${c.troops}${rdy})</option>`;
+    }).join('');
+
+    sel.innerHTML = `
+      <optgroup label="🚩 我軍領城 (${pCities.length})">${optHtml(pCities)}</optgroup>
+      <optgroup label="⚔️ 他國城池 (${otherCities.length})">${optHtml(otherCities)}</optgroup>
+      ${emptyCities.length ? `<optgroup label="🏳 空白城 (${emptyCities.length})">${optHtml(emptyCities)}</optgroup>` : ''}
+    `;
+    sel.onchange = () => {
+      Audio.click();
+      selectedCityId = sel.value;
+      renderAll();
+    };
+  }
+
   function renderMap() {
+    renderQuickSelect();
     const canvas = document.getElementById('china-map');
     const ctx = canvas.getContext('2d');
     const W = canvas.width;
@@ -369,50 +398,49 @@ window.RTK3 = window.RTK3 || {};
     ctx.fillRect(0, 0, W, H);
 
     // Subtle map grid lines
-    ctx.strokeStyle = 'rgba(200, 168, 75, 0.08)';
+    ctx.strokeStyle = 'rgba(200, 168, 75, 0.07)';
     ctx.lineWidth = 1;
-    for (let x = 80; x < W; x += 80) {
+    for (let x = 100; x < W; x += 100) {
       ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
     }
-    for (let y = 80; y < H; y += 80) {
+    for (let y = 95; y < H; y += 95) {
       ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
     }
 
-    // Stylized Yellow River (黄河) & Yangtze River (長江)
+    // Stylized Yellow River (黄河) & Yangtze River (長江) scaled for 1200x760
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.strokeStyle = 'rgba(62, 130, 185, 0.42)';
     ctx.lineWidth = 10;
-    // Yellow River
     ctx.beginPath();
-    ctx.moveTo(70, 140);
-    ctx.quadraticCurveTo(210, 195, 290, 210);
-    ctx.quadraticCurveTo(410, 215, 515, 195);
-    ctx.quadraticCurveTo(640, 175, 780, 130);
+    ctx.moveTo(90, 160);
+    ctx.quadraticCurveTo(260, 230, 410, 245);
+    ctx.quadraticCurveTo(610, 255, 765, 240);
+    ctx.quadraticCurveTo(900, 225, 1020, 195);
     ctx.stroke();
 
     // Yangtze River
     ctx.lineWidth = 12;
     ctx.beginPath();
-    ctx.moveTo(140, 520);
-    ctx.quadraticCurveTo(320, 480, 465, 450);
-    ctx.quadraticCurveTo(620, 430, 770, 395);
-    ctx.quadraticCurveTo(860, 390, 945, 405);
+    ctx.moveTo(185, 595);
+    ctx.quadraticCurveTo(420, 565, 620, 535);
+    ctx.quadraticCurveTo(820, 505, 985, 450);
+    ctx.quadraticCurveTo(1065, 430, 1140, 438);
     ctx.stroke();
 
     // Coastline / Sea on East
     ctx.fillStyle = 'rgba(30, 72, 112, 0.35)';
     ctx.beginPath();
-    ctx.moveTo(860, 0);
-    ctx.lineTo(1000, 0);
-    ctx.lineTo(1000, 640);
-    ctx.lineTo(790, 640);
-    ctx.quadraticCurveTo(910, 510, 910, 390);
-    ctx.quadraticCurveTo(840, 240, 770, 130);
-    ctx.quadraticCurveTo(820, 60, 860, 0);
+    ctx.moveTo(1045, 0);
+    ctx.lineTo(1200, 0);
+    ctx.lineTo(1200, 760);
+    ctx.lineTo(980, 760);
+    ctx.quadraticCurveTo(1125, 590, 1125, 445);
+    ctx.quadraticCurveTo(1080, 285, 1015, 195);
+    ctx.quadraticCurveTo(1055, 110, 1045, 0);
     ctx.fill();
 
-    // Roads between cities
+    // Roads between 46 cities
     const drawn = new Set();
     game.cities.forEach(c => {
       c.neighbors.forEach(nid => {
@@ -421,9 +449,9 @@ window.RTK3 = window.RTK3 || {};
         drawn.add(key);
         const nb = getCity(nid);
         if (!nb) return;
-        ctx.strokeStyle = 'rgba(218, 185, 112, 0.38)';
-        ctx.lineWidth = 3;
-        ctx.setLineDash([7, 5]);
+        ctx.strokeStyle = 'rgba(218, 185, 112, 0.34)';
+        ctx.lineWidth = 2.2;
+        ctx.setLineDash([6, 4]);
         ctx.beginPath();
         ctx.moveTo(c.x, c.y);
         ctx.lineTo(nb.x, nb.y);
@@ -437,8 +465,8 @@ window.RTK3 = window.RTK3 || {};
     if (selCity) {
       selCity.neighbors.forEach(nid => {
         const nb = getCity(nid);
-        ctx.strokeStyle = 'rgba(255, 215, 90, 0.65)';
-        ctx.lineWidth = 3.5;
+        ctx.strokeStyle = 'rgba(255, 215, 90, 0.72)';
+        ctx.lineWidth = 3.2;
         ctx.beginPath();
         ctx.moveTo(selCity.x, selCity.y);
         ctx.lineTo(nb.x, nb.y);
@@ -446,7 +474,7 @@ window.RTK3 = window.RTK3 || {};
       });
     }
 
-    // Draw cities
+    // Draw 46 cities cleanly
     game.cities.forEach(c => {
       const fac = c.owner ? FACTIONS[c.owner] : null;
       const color = fac ? fac.color : '#5a6270';
@@ -455,40 +483,40 @@ window.RTK3 = window.RTK3 || {};
 
       if (isSelected) {
         ctx.beginPath();
-        ctx.arc(c.x, c.y, 26, 0, Math.PI * 2);
+        ctx.arc(c.x, c.y, 20, 0, Math.PI * 2);
         ctx.strokeStyle = '#ffd15c';
         ctx.lineWidth = 3;
         ctx.stroke();
       }
 
-      // Castle square
+      // Castle square (compact for 46 cities)
       ctx.fillStyle = color;
       ctx.strokeStyle = isPlayer ? '#ffd15c' : '#d5d8e0';
-      ctx.lineWidth = isPlayer ? 2.5 : 1.5;
-      ctx.fillRect(c.x - 16, c.y - 16, 32, 32);
-      ctx.strokeRect(c.x - 16, c.y - 16, 32, 32);
+      ctx.lineWidth = isPlayer ? 2.2 : 1.3;
+      ctx.fillRect(c.x - 12, c.y - 12, 24, 24);
+      ctx.strokeRect(c.x - 12, c.y - 12, 24, 24);
 
       // Faction banner char
       ctx.fillStyle = '#fff';
-      ctx.font = 'bold 16px "Noto Serif TC", serif';
+      ctx.font = 'bold 13px "Noto Serif TC", serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(fac ? fac.banner : '空', c.x, c.y + 1);
 
       // City label & troops
-      ctx.fillStyle = 'rgba(12, 16, 24, 0.85)';
-      ctx.fillRect(c.x - 38, c.y + 20, 76, 30);
-      ctx.strokeStyle = 'rgba(200, 168, 75, 0.5)';
+      ctx.fillStyle = 'rgba(10, 14, 22, 0.86)';
+      ctx.fillRect(c.x - 31, c.y + 14, 62, 24);
+      ctx.strokeStyle = isSelected ? '#ffd15c' : 'rgba(200, 168, 75, 0.45)';
       ctx.lineWidth = 1;
-      ctx.strokeRect(c.x - 38, c.y + 20, 76, 30);
+      ctx.strokeRect(c.x - 31, c.y + 14, 62, 24);
 
       ctx.fillStyle = isSelected ? '#ffd15c' : '#f2ede2';
-      ctx.font = 'bold 12px sans-serif';
-      ctx.fillText(c.name, c.x, c.y + 29);
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillText(c.name, c.x, c.y + 21);
 
-      ctx.fillStyle = '#a8d5ff';
-      ctx.font = '10px monospace';
-      ctx.fillText(`兵${c.troops}`, c.x, c.y + 42);
+      ctx.fillStyle = '#9fd3ff';
+      ctx.font = '9px monospace';
+      ctx.fillText(`兵${c.troops}`, c.x, c.y + 32);
     });
   }
 
@@ -537,7 +565,7 @@ window.RTK3 = window.RTK3 || {};
     document.getElementById('city-panel').innerHTML = `
       <div class="city-head">
         <div>
-          <h3>${city.name} <small>(${city.kana})</small></h3>
+          <h3>${city.name} <small>(${city.kana})</small> ${jpPlayBtn(city.kana)}</h3>
           <div class="city-sub">${city.terrain} · ${ownerTag}</div>
         </div>
         <div class="ready-badge">${isPlayer ? `可行動將領：${readyCount}/${cityGens.length}` : '他國都市'}</div>
@@ -556,13 +584,13 @@ window.RTK3 = window.RTK3 || {};
         <div class="stat-box">${n5Tag(city.morale >= 70 ? 'tsuyoi' : 'yowai', '士氣')}<span>${city.morale}</span></div>
       </div>
 
-      <div class="section-label">${n5Tag('namae', '駐守武將')} (${cityGens.length}) ${city.freeGens.length > 0 && isPlayer ? `<span class="free-hint">· 在野可探索</span>` : ''}</div>
+      <div class="section-label">${n5Tag('namae', '駐守武將')} (${cityGens.length}) ${city.freeGens.length > 0 && isPlayer ? `<span class="free-hint">· 在野可探索 (${city.freeGens.length}人)</span>` : ''}</div>
       <div class="gen-list">
         ${cityGens.length === 0 ? '<div class="empty-note">城中無武將</div>' : cityGens.map(g => `
           <div class="gen-row ${g.acted ? 'gen-acted' : ''}">
             ${renderPortraitSVG(g, 38)}
             <div class="gen-meta">
-              <div class="gen-name">${g.name} <small>${g.kana}</small> ${g.acted ? '<span class="tag-done">已動</span>' : '<span class="tag-ready">待命</span>'}</div>
+              <div class="gen-name">${g.name} <small>${g.kana}</small> ${jpPlayBtn(g.kana)} ${g.acted ? '<span class="tag-done">已動</span>' : '<span class="tag-ready">待命</span>'}</div>
               <div class="gen-nums">陸${g.land} 水${g.naval} 武${g.war} 知${g.int} 政${g.pol} 魅${g.charm}</div>
             </div>
           </div>
@@ -1111,7 +1139,7 @@ window.RTK3 = window.RTK3 || {};
     const fac = FACTIONS[game.playerFactionId];
     scr.innerHTML = `
       <div class="victory-card panel-gold">
-        <h1>${isWin ? '🏆 天下統一（てんかとういつ）！' : '💀 霸業夢碎…'}</h1>
+        <h1>${isWin ? `🏆 天下統一（てんかとういつ ${jpPlayBtn('てんかとういつ')}）！` : '💀 霸業夢碎…'}</h1>
         <p class="vic-sub">
           ${isWin
             ? `西元 ${game.year} 年 ${game.month} 月，主公 <strong>${fac.name}</strong> 平定四海，終結亂世，統一天下！`
@@ -1152,15 +1180,107 @@ window.RTK3 = window.RTK3 || {};
   }
 
   function setupGlobalN5Delegates() {
+    // Capture phase: clicking any 🔊 jp-play-btn always speaks Japanese without triggering parent card/button
     document.addEventListener('click', (e) => {
-      const chip = e.target.closest('[data-n5]');
-      if (!chip) return;
-      const id = chip.dataset.n5;
-      if (N5_BY_ID[id]) {
+      const spk = e.target.closest('[data-speak]');
+      if (spk) {
+        e.preventDefault();
         e.stopPropagation();
-        showN5Card(id);
+        speakJP(spk.dataset.speak, spk);
+        return;
+      }
+      const chip = e.target.closest('[data-n5]');
+      if (chip) {
+        const id = chip.dataset.n5;
+        if (N5_BY_ID[id]) {
+          e.stopPropagation();
+          showN5Card(id);
+        }
+      }
+    }, true);
+
+    document.addEventListener('keydown', (e) => {
+      if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-speak]')) {
+        e.preventDefault();
+        e.stopPropagation();
+        speakJP(e.target.dataset.speak, e.target);
       }
     });
+  }
+
+  function openRosterModal() {
+    const modal = document.getElementById('action-modal');
+    modal.classList.remove('hidden');
+    let filterMode = 'all';
+    let searchTxt = '';
+
+    // Build quick lookup of where every one of the 311 generals currently is
+    const locMap = {};
+    game.cities.forEach(c => {
+      c.gens.forEach(gid => {
+        locMap[gid] = { city: c, status: c.owner === game.playerFactionId ? 'player' : 'other' };
+      });
+      c.freeGens.forEach(gid => {
+        locMap[gid] = { city: c, status: 'free' };
+      });
+    });
+
+    function drawRoster() {
+      const q = searchTxt.trim();
+      const filtered = GENERALS_TEMPLATE.filter(g => {
+        const loc = locMap[g.id];
+        if (filterMode !== 'all' && (!loc || loc.status !== filterMode)) return false;
+        if (q && !g.name.includes(q) && !g.kana.includes(q)) return false;
+        return true;
+      });
+
+      modal.innerHTML = `
+        <div class="modal-box modal-wide panel-gold">
+          <div class="modal-head-row">
+            <h3>📋 三國武將名鑑（共 ${GENERALS_TEMPLATE.length} 名・目前符合 ${filtered.length} 名）</h3>
+            <button class="btn-rtk btn-sm" id="btn-roster-close">關閉</button>
+          </div>
+          <div class="roster-controls">
+            <div class="cat-tabs">
+              <button class="btn-rtk btn-sm ${filterMode === 'all' ? 'btn-accent' : ''}" data-rf="all">全部 (${GENERALS_TEMPLATE.length})</button>
+              <button class="btn-rtk btn-sm ${filterMode === 'player' ? 'btn-accent' : ''}" data-rf="player">🚩 我軍</button>
+              <button class="btn-rtk btn-sm ${filterMode === 'free' ? 'btn-accent' : ''}" data-rf="free">🔍 在野</button>
+              <button class="btn-rtk btn-sm ${filterMode === 'other' ? 'btn-accent' : ''}" data-rf="other">⚔️ 他國</button>
+            </div>
+            <input type="text" id="roster-search" class="roster-search" placeholder="搜尋武將中文名或假名..." value="${searchTxt}" />
+          </div>
+          <div class="roster-grid">
+            ${filtered.slice(0, 120).map(g => {
+              const loc = locMap[g.id];
+              const locText = loc
+                ? (loc.status === 'free' ? `在野＠${loc.city.name}` : `${loc.city.owner ? FACTIONS[loc.city.owner].name : '空白'}＠${loc.city.name}`)
+                : '未登場';
+              return `
+                <div class="roster-card ${loc ? 'st-' + loc.status : ''}">
+                  ${renderPortraitSVG(g, 42)}
+                  <div class="roster-info">
+                    <div class="roster-top"><strong>${g.name}</strong> <small>${g.kana}</small> ${jpPlayBtn(g.kana)}</div>
+                    <div class="gen-nums">陸${g.land} 水${g.naval} 武${g.war} 知${g.int} 政${g.pol} 魅${g.charm}</div>
+                    <div class="roster-loc">${locText}</div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+          ${filtered.length > 120 ? `<div class="empty-note" style="margin-top:6px;">顯示前 120 筆，請輸入關鍵字搜尋其餘武將。</div>` : ''}
+        </div>
+      `;
+
+      modal.querySelectorAll('[data-rf]').forEach(b => {
+        b.onclick = () => { filterMode = b.dataset.rf; drawRoster(); };
+      });
+      const inp = document.getElementById('roster-search');
+      inp.oninput = () => { searchTxt = inp.value; drawRoster(); };
+      inp.focus();
+      inp.setSelectionRange(searchTxt.length, searchTxt.length);
+      document.getElementById('btn-roster-close').onclick = () => modal.classList.add('hidden');
+    }
+    drawRoster();
   }
 
   function showN5Card(id) {
@@ -1218,7 +1338,7 @@ window.RTK3 = window.RTK3 || {};
                   <button class="btn-link wb-spk" data-spk="${w.kana}">🔊</button>
                 </div>
                 <div class="wb-mean">${w.meaning} · <span class="wb-tag">${w.uiTag}</span></div>
-                <div class="wb-ex">${w.example}</div>
+                <div class="wb-ex">${w.example} ${jpPlayBtn(w.example, '播放例句讀音')}</div>
               </div>
             `).join('')}
           </div>
@@ -1246,7 +1366,11 @@ window.RTK3 = window.RTK3 || {};
         <h3>🎓 軍師的日語 N5 問答</h3>
         <div class="quiz-prompt">${q.promptHtml} <button class="btn-rtk btn-sm" id="btn-quiz-spk">🔊 再聽一次</button></div>
         <div class="quiz-options">
-          ${q.options.map(o => `<button class="btn-rtk quiz-opt" data-oid="${o.id}"><strong>${o.label}</strong> <small>${o.sub}</small></button>`).join('')}
+          ${q.options.map(o => {
+            const wObj = N5_BY_ID[o.id];
+            const optSpeak = q.mode !== 'jp2zh' && wObj ? jpPlayBtn(wObj.kana) : '';
+            return `<button class="btn-rtk quiz-opt" data-oid="${o.id}"><strong>${o.label} ${optSpeak}</strong> <small>${o.sub}</small></button>`;
+          }).join('')}
         </div>
         <div id="quiz-feedback" class="quiz-feedback"></div>
       </div>
@@ -1302,7 +1426,7 @@ window.RTK3 = window.RTK3 || {};
       modal.innerHTML = `
         <div class="modal-box panel-gold">
           <div class="modal-head-row">
-            <h3>🏫 三國私塾（<ruby>勉強<rt>べんきょう</rt></ruby>）— 第 ${qIdx + 1} / ${totalQ} 題</h3>
+            <h3>🏫 三國私塾（<ruby>私塾<rt>しじゅく</rt></ruby>${jpPlayBtn('しじゅく')}・<ruby>勉強<rt>べんきょう</rt></ruby>${jpPlayBtn('べんきょう')}）— 第 ${qIdx + 1} / ${totalQ} 題</h3>
             <span class="badge">${isRewardRun ? '💰 正式測驗（贈軍資金）' : '📝 自由練習模式'}</span>
           </div>
           <div class="shijuku-sub">
@@ -1315,7 +1439,11 @@ window.RTK3 = window.RTK3 || {};
             <button class="btn-rtk btn-sm" id="btn-sj-spk">🔊 聽讀音</button>
           </div>
           <div class="quiz-options">
-            ${currentQ.options.map(o => `<button class="btn-rtk quiz-opt" data-oid="${o.id}"><strong>${o.label}</strong> <small>${o.sub}</small></button>`).join('')}
+            ${currentQ.options.map(o => {
+              const wObj = N5_BY_ID[o.id];
+              const optSpeak = currentQ.mode !== 'jp2zh' && wObj ? jpPlayBtn(wObj.kana) : '';
+              return `<button class="btn-rtk quiz-opt" data-oid="${o.id}"><strong>${o.label} ${optSpeak}</strong> <small>${o.sub}</small></button>`;
+            }).join('')}
           </div>
           <div id="sj-feedback" class="quiz-feedback"></div>
           <div class="modal-actions">
@@ -1387,7 +1515,7 @@ window.RTK3 = window.RTK3 || {};
           <h3>🏫 私塾結業成績單</h3>
           <div style="font-size:22px; color:#ffe39c; margin:10px 0;">答對 ${correctCount} / ${totalQ} 題</div>
           ${isRewardRun
-            ? `<div style="font-size:15px; color:#84f5b2; margin-bottom:8px;">撥付軍資金（<ruby>お金<rt>おかね</rt></ruby>）：<strong>+${totalReward} 金</strong>（入庫：${targetCity ? targetCity.name : '-'}）</div>`
+            ? `<div style="font-size:15px; color:#84f5b2; margin-bottom:8px;">撥付軍資金（<ruby>お金<rt>おかね</rt></ruby>${jpPlayBtn('おかね')}）：<strong>+${totalReward} 金</strong>（入庫：${targetCity ? targetCity.name : '-'}）</div>`
             : `<div style="color:#aeb9cc; margin-bottom:8px;">自由練習完成！已累積掌握 ${n5Mastered.size} / ${N5_VOCAB.length} 個 N5 詞彙。</div>`}
           ${bonusText ? `<div class="ok-msg" style="margin-bottom:10px;">${bonusText}</div>` : ''}
           <button class="btn-rtk btn-accent" id="btn-sj-done">返回軍政</button>

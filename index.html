@@ -21,17 +21,17 @@
 
       <div class="setup-columns">
         <div class="setup-col">
-          <h2>1. 選擇劇本年代（<ruby>年<rt>ねん</rt></ruby>・<ruby>新<rt>あたら</rt></ruby>しい<ruby>物語<rt>ものがたり</rt></ruby>）</h2>
+          <h2>1. 選擇劇本年代（<ruby>年<rt>ねん</rt></ruby><span role="button" tabindex="0" class="jp-play-btn" data-speak="ねん" title="播放日文讀音">🔊</span>・<ruby>新<rt>あたら</rt></ruby>しい<ruby>物語<rt>ものがたり</rt></ruby><span role="button" tabindex="0" class="jp-play-btn" data-speak="あたらしいものがたり" title="播放日文讀音">🔊</span>）</h2>
           <div id="scenario-list" class="scen-list"></div>
         </div>
         <div class="setup-col">
-          <h2>2. 選擇君主勢力（<ruby>名前<rt>なまえ</rt></ruby>・<ruby>国<rt>くに</rt></ruby>）</h2>
+          <h2>2. 選擇君主勢力（<ruby>名前<rt>なまえ</rt></ruby><span role="button" tabindex="0" class="jp-play-btn" data-speak="なまえ" title="播放日文讀音">🔊</span>・<ruby>国<rt>くに</rt></ruby><span role="button" tabindex="0" class="jp-play-btn" data-speak="くに" title="播放日文讀音">🔊</span>）</h2>
           <div id="ruler-list" class="ruler-list"></div>
         </div>
       </div>
 
       <div class="title-actions">
-        <button id="btn-start-game" class="btn-rtk btn-accent btn-lg">⚔️ 開始霸業（<ruby>始<rt>はじ</rt></ruby>める）</button>
+        <button id="btn-start-game" class="btn-rtk btn-accent btn-lg">⚔️ 開始霸業（<ruby>始<rt>はじ</rt></ruby>める <span role="button" tabindex="0" class="jp-play-btn" data-speak="はじめる" title="播放日文讀音">🔊</span>）</button>
         <button id="btn-continue-save" class="btn-rtk btn-lg" style="display:none;">📂 繼續上次進度</button>
       </div>
     </div>
@@ -44,15 +44,19 @@
     <main class="main-layout">
       <!-- Left: Strategic China Map -->
       <div class="map-panel panel-gold">
-        <div class="map-compass">
-          <span class="dir-badge dir-n n5-chip" data-n5="kita"><ruby>北<rt>きた</rt></ruby></span>
-          <span class="dir-badge dir-s n5-chip" data-n5="minami"><ruby>南<rt>みなみ</rt></ruby></span>
-          <span class="dir-badge dir-w n5-chip" data-n5="nishi"><ruby>西<rt>にし</rt></ruby></span>
-          <span class="dir-badge dir-e n5-chip" data-n5="higashi"><ruby>東<rt>ひがし</rt></ruby></span>
+        <div class="map-toolbar">
+          <span class="map-badge-info">🗺 全國 46 城池 · 311 名武將</span>
+          <select id="city-quick-select" class="city-select" title="快速跳轉至任意城池"></select>
         </div>
-        <canvas id="china-map" width="1000" height="640"></canvas>
+        <div class="map-compass">
+          <span class="dir-badge dir-n n5-chip" data-n5="kita"><ruby>北<rt>きた</rt></ruby><span role="button" tabindex="0" class="jp-play-btn" data-speak="きた" title="播放日文讀音：きた">🔊</span></span>
+          <span class="dir-badge dir-s n5-chip" data-n5="minami"><ruby>南<rt>みなみ</rt></ruby><span role="button" tabindex="0" class="jp-play-btn" data-speak="みなみ" title="播放日文讀音：みなみ">🔊</span></span>
+          <span class="dir-badge dir-w n5-chip" data-n5="nishi"><ruby>西<rt>にし</rt></ruby><span role="button" tabindex="0" class="jp-play-btn" data-speak="にし" title="播放日文讀音：にし">🔊</span></span>
+          <span class="dir-badge dir-e n5-chip" data-n5="higashi"><ruby>東<rt>ひがし</rt></ruby><span role="button" tabindex="0" class="jp-play-btn" data-speak="ひがし" title="播放日文讀音：ひがし">🔊</span></span>
+        </div>
+        <canvas id="china-map" width="1200" height="760"></canvas>
         <div class="map-footer-hint">
-          <span>🗺 點選地圖城池切換視角 · 黃線為相鄰<span class="n5-chip" data-n5="michi"><ruby>道<rt>みち</rt></ruby></span>路 · 點任何假名可看 N5 解說與發音</span>
+          <span>🗺 點選地圖城池切換視角 · 黃線為相鄰<span class="n5-chip" data-n5="michi"><ruby>道<rt>みち</rt></ruby><span role="button" tabindex="0" class="jp-play-btn" data-speak="みち" title="播放日文讀音：みち">🔊</span></span>路 · 所有日文處皆可點 🔊 聽讀音</span>
         </div>
       </div>
 
@@ -62,7 +66,7 @@
         <div id="city-panel" class="panel-gold side-box"></div>
         <div id="command-panel" class="panel-gold side-box"></div>
         <div class="panel-gold side-box log-panel">
-          <div class="section-label">📜 軍政日誌（<span class="n5-chip" data-n5="ima"><ruby>今<rt>いま</rt></ruby></span>）</div>
+          <div class="section-label">📜 軍政日誌（<span class="n5-chip" data-n5="ima"><ruby>今<rt>いま</rt></ruby><span role="button" tabindex="0" class="jp-play-btn" data-speak="いま" title="播放日文讀音：いま">🔊</span></span>）</div>
           <div id="strategy-log" class="strategy-log"></div>
         </div>
       </aside>
@@ -93,6 +97,7 @@
   <div id="n5-toast-card" class="n5-toast panel-gold hidden"></div>
 
   <script defer src="src/n5Data.js"></script>
+  <script defer src="src/generals311.js"></script>
   <script defer src="src/gameData.js"></script>
   <script defer src="src/audioAndPortraits.js"></script>
   <script defer src="src/battle.js"></script>

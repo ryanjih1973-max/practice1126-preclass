@@ -120,14 +120,23 @@ window.RTK3.getSeasonByMonth = function (month) {
   return { zh: '冬', n5Id: 'fuyu' };
 };
 
-// Render an interactive N5 ruby pill HTML snippet
+// Render an explicit clickable Japanese pronunciation button
+window.RTK3.jpPlayBtn = function (speakText, title = '') {
+  if (!speakText) return '';
+  const safe = String(speakText).replace(/"/g, '&quot;');
+  const tip = title || `播放日文讀音：${safe}`;
+  return `<span role="button" tabindex="0" class="jp-play-btn" data-speak="${safe}" title="${tip}" aria-label="${tip}">🔊</span>`;
+};
+
+// Render an interactive N5 ruby pill HTML snippet (always paired with explicit Japanese audio button)
 window.RTK3.n5Tag = function (vocabId, labelZh, compact = false) {
   const w = window.RTK3.N5_BY_ID[vocabId];
   if (!w) return labelZh || '';
+  const playBtn = window.RTK3.jpPlayBtn(w.kana, `播放「${w.kanji}（${w.kana}）」日文讀音`);
   if (compact) {
-    return `<span class="n5-chip" data-n5="${w.id}" title="點擊查看 N5 詞彙與發音：${w.kanji} (${w.kana}) = ${w.meaning}"><ruby>${w.kanji}<rt>${w.kana}</rt></ruby></span>`;
+    return `<span class="n5-chip" data-n5="${w.id}" title="點擊查看 N5 詞彙：${w.kanji} (${w.kana}) = ${w.meaning}"><ruby>${w.kanji}<rt>${w.kana}</rt></ruby>${playBtn}</span>`;
   }
-  return `<span class="n5-label" data-n5="${w.id}" title="N5: ${w.kanji} (${w.kana} / ${w.romaji}) - ${w.meaning}">${labelZh ? `<span class="zh-lbl">${labelZh}</span> ` : ''}<span class="n5-chip"><ruby>${w.kanji}<rt>${w.kana}</rt></ruby></span></span>`;
+  return `<span class="n5-label" data-n5="${w.id}" title="N5: ${w.kanji} (${w.kana} / ${w.romaji}) - ${w.meaning}">${labelZh ? `<span class="zh-lbl">${labelZh}</span> ` : ''}<span class="n5-chip"><ruby>${w.kanji}<rt>${w.kana}</rt></ruby>${playBtn}</span></span>`;
 };
 
 // Generate a contextual N5 quiz question

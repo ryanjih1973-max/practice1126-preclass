@@ -88,9 +88,13 @@ window.RTK3.Audio = (function () {
   };
 })();
 
-window.RTK3.speakJP = function (text) {
+window.RTK3.speakJP = function (text, triggerEl = null) {
   if (!('speechSynthesis' in window) || !text) return false;
   try {
+    if (triggerEl) {
+      triggerEl.classList.add('speaking');
+      setTimeout(() => triggerEl.classList.remove('speaking'), 900);
+    }
     window.speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = 'ja-JP';

@@ -481,20 +481,21 @@ window.RTK3.Battle = (function () {
     const duelLog = [`⚔️ ${attacker.gen.name}（武力 ${attacker.gen.war}）與 ${defender.gen.name}（武力 ${defender.gen.war}）展開一騎討ち！`];
 
     function renderDuel() {
+      const jpBtn = window.RTK3.jpPlayBtn;
       overlay.innerHTML = `
         <div class="duel-box panel-gold">
-          <h3>⚔️ 一騎討ち（單挑決鬥）— 第 ${round} / 3 回合</h3>
+          <h3>⚔️ <ruby>一騎討<rt>いっきう</rt></ruby>ち${jpBtn('いっきうち')}（單挑決鬥）— 第 ${round} / 3 回合</h3>
           <div class="duel-fighters">
             <div class="duel-side">
               ${window.RTK3.renderPortraitSVG(attacker.gen, 72)}
-              <div class="duel-name">${attacker.gen.name}（武 ${attacker.gen.war}）</div>
+              <div class="duel-name">${attacker.gen.name} <small>${attacker.gen.kana}</small> ${jpBtn(attacker.gen.kana)}（武 ${attacker.gen.war}）</div>
               <div class="hp-bar"><div class="hp-fill player" style="width:${atkHp}%"></div></div>
               <div class="hp-num">體力 ${atkHp}</div>
             </div>
             <div class="duel-vs">VS</div>
             <div class="duel-side">
               ${window.RTK3.renderPortraitSVG(defender.gen, 72)}
-              <div class="duel-name">${defender.gen.name}（武 ${defender.gen.war}）</div>
+              <div class="duel-name">${defender.gen.name} <small>${defender.gen.kana}</small> ${jpBtn(defender.gen.kana)}（武 ${defender.gen.war}）</div>
               <div class="hp-bar"><div class="hp-fill enemy" style="width:${defHp}%"></div></div>
               <div class="hp-num">體力 ${defHp}</div>
             </div>
@@ -581,10 +582,11 @@ window.RTK3.Battle = (function () {
   function render() {
     if (!state) return;
     const n5 = window.RTK3.n5Tag;
+    const jpBtn = window.RTK3.jpPlayBtn;
     const header = document.getElementById('battle-header');
     header.innerHTML = `
       <div class="battle-title">
-        <span>⚔️ ${state.city.name}攻防戰</span>
+        <span>⚔️ ${state.city.name}<small>(${state.city.kana})</small>${jpBtn(state.city.kana)} 攻防戰</span>
         <span class="badge">${n5('jikan', '日數')} ${state.turn}/${state.maxTurns}</span>
         <span class="badge">${n5('tenki', '天氣')}：${n5(state.weather.n5Id, state.weather.name)}</span>
       </div>
@@ -639,7 +641,7 @@ window.RTK3.Battle = (function () {
         <div class="b-unit-card">
           ${window.RTK3.renderPortraitSVG(sel.gen, 56)}
           <div>
-            <div class="b-card-name">${sel.gen.name} <small>(${sel.gen.kana})</small></div>
+            <div class="b-card-name">${sel.gen.name} <small>(${sel.gen.kana})</small> ${jpBtn(sel.gen.kana)}</div>
             <div class="b-card-stats">兵力 ${sel.troops} | 武 ${sel.gen.war} 知 ${sel.gen.int} 陸 ${sel.gen.land}</div>
             <div class="b-card-terrain">地形：${n5(tInfo.n5Id, tInfo.name)}</div>
           </div>
@@ -657,7 +659,7 @@ window.RTK3.Battle = (function () {
         <button class="btn-rtk" id="b-btn-move" ${canAct && !sel.moved ? '' : 'disabled'}>🏃 移動 ${n5('iku', '', true)}</button>
         <button class="btn-rtk" id="b-btn-atk" ${canAct && adjEnemies.length > 0 ? '' : 'disabled'}>⚔️ 攻擊 ${n5('tsuyoi', '', true)}</button>
         <button class="btn-rtk" id="b-btn-fire" ${canAct && fireEnemies.length > 0 && sel.fireUsed < 2 ? '' : 'disabled'}>🔥 火計 ${n5('tsukau', '', true)}</button>
-        <button class="btn-rtk" id="b-btn-duel" ${canAct && adjEnemies.length > 0 ? '' : 'disabled'}>🤺 單挑</button>
+        <button class="btn-rtk" id="b-btn-duel" ${canAct && adjEnemies.length > 0 ? '' : 'disabled'}>🤺 <ruby>一騎討<rt>いっきう</rt></ruby>ち ${jpBtn('いっきうち')}</button>
         <button class="btn-rtk" id="b-btn-wait" ${canAct ? '' : 'disabled'}>🛡 待機 ${n5('matsu', '', true)}</button>
         <button class="btn-rtk btn-accent" id="b-btn-quiz" ${isPlayerTurn && !state.n5QuizUsedThisBattle ? '' : 'disabled'}>🎓 N5 軍師策</button>
       </div>
